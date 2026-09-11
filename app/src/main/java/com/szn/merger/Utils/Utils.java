@@ -7,6 +7,7 @@ import android.animation.ObjectAnimator;
 import android.animation.PropertyValuesHolder;
 import android.animation.ValueAnimator;
 import android.app.Activity;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.ColorStateList;
@@ -264,5 +265,10 @@ public class Utils {
 
     public static void toast(Context context, String msg) {
         Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
+    }
+
+    public static String getUserCopyClipBoard(Context context) {
+        ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+        return clipboard.hasPrimaryClip() ? clipboard.getPrimaryClip().getItemAt(0).getText().toString() : "";
     }
 }

@@ -1,6 +1,4 @@
 <resources>
-
-    <!-- define ONCE -->
     <attr name="itemTitle" format="string"/>
     <attr name="itemDesc" format="string"/>
     <attr name="itemIcon" format="reference"/>
@@ -12,13 +10,8 @@
     </declare-styleable>
 
     <declare-styleable name="CustomDropdownItem">
-        <attr name="list" format="string"/>
-        <attr name="prefKey" format="string"/>
-        <attr name="itemDefaultText" format="string"/>
-        <!-- reuse, bukan define ulang -->
-        <attr name="itemTitle"/>
-        <attr name="itemDesc"/>
-        <attr name="itemIcon"/>
+        <attr name="title" format="string" />
+        <attr name="subtitle" format="string" />
     </declare-styleable>
 
 </resources>

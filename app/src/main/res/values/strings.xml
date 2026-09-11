@@ -558,4 +558,19 @@
     <string name="no_matching_dpi_was_found_select_a_split_instead">No matching DPI was found, select a split instead.</string>
     <string name="no_matching_language_was_found_select_a_split_instead">No matching Language was found, select a split instead.</string>
     <string name="select_at_least_one_file">Select at least one file</string>
+
+    <string-array name="validity_options">
+        <item>1 Month</item>
+        <item>3 Months</item>
+        <item>6 Months</item>
+        <item>1 Year</item>
+        <item>2 Years</item>
+        <item>3 Years</item>
+        <item>5 Years</item>
+        <item>10 Years</item>
+        <item>15 Years</item>
+        <item>20 Years</item>
+        <item>30 Years</item>
+        <item>50 Years</item>
+    </string-array>
 </resources>

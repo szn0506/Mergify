@@ -6,12 +6,14 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -24,12 +26,17 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.szn.merger.CustomSwitchItem;
 import com.szn.merger.R;
 import com.szn.merger.ThemeManager;
+import com.szn.merger.Utils.CustomView.CustomDropdownItem;
+import com.szn.merger.Utils.RadioAdapter;
 
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.StringJoiner;
 
 public class SigningActivity extends AppCompatActivity {
     private CustomSwitchItem signSwitch;
-    TextInputEditText keystoreName, alias, password, confirmPassword, importPassword;
+    TextInputEditText keystoreNameInput, alias, password, confirmPassword, importPassword, commonNameInput, organizationInput, organizationalUnitInput, localityInput, stateInput, countryInput;
     private MaterialCardView signSchemes;
     private static MaterialCheckBox V1, V2, V3, V4, V3_1;
     private TextView currentSchemes;
@@ -38,7 +45,7 @@ public class SigningActivity extends AppCompatActivity {
     private KeystoreAdapter adapter;
     private MaterialButton btnGenerate;
     private MaterialButton btnImport;
-    private String name, aliasName, pass, confirm, importPass;
+    private String keystoreName, aliasName, pass, confirm, importPass;
     private Uri selectedKeystoreUri;
     private String selectedKeystoreType, selectedKeystoreName;
 
@@ -96,11 +103,10 @@ public class SigningActivity extends AppCompatActivity {
 
     private boolean validateGenerateInput() {
 
-        if (name.isEmpty()) {
-            keystoreName.setError("Required");
+        if (keystoreName.isEmpty()) {
+            keystoreNameInput.setError("Required");
             return false;
         }
-
         if (aliasName.isEmpty()) {
             alias.setError("Required");
             return false;
@@ -118,36 +124,19 @@ public class SigningActivity extends AppCompatActivity {
 
         return true;
     }
-    private void generateKeystore(
-            String name,
-            String aliasName,
-            String password
-    ) {
-
+    private void generateKeystore(String name, String aliasName, String password, String commonName, String organization, String organizationalUnit, String locality, String state, String country, Date validityNotBefore, Date validityNotAfter) {
         try {
+            KeystoreManager manager = new KeystoreManager(this);
 
-            KeystoreManager manager =
-                    new KeystoreManager(this);
+            KeystoreGenerator generator = new KeystoreGenerator(name, aliasName, password, commonName, organization, organizationalUnit, locality, state, country, validityNotBefore, validityNotAfter);
 
-            KeystoreGenerator generator =
-                    new KeystoreGenerator(
-                            name,
-                            aliasName,
-                            password
-                    );
-
-            KeystoreManager.Item item =
-                    generator.generate(
-                            manager.getFolder()
-                    );
+            KeystoreManager.Item item = generator.generate(manager.getFolder());
             Log.d(
                     "KEYSTORE",
                     "Saved: " + item.fileName);
             manager.save(item);
 
-            adapter.reload(
-                    manager.getAll()
-            );
+            adapter.reload(manager.getAll());
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -160,29 +149,89 @@ public class SigningActivity extends AppCompatActivity {
         bottomSheetDialog.setContentView(bottomSheetView);
         bottomSheetDialog.show();
 
-        keystoreName = bottomSheetView.findViewById(R.id.keystoreName);
-        alias = bottomSheetView.findViewById(R.id.alias);
-        password = bottomSheetView.findViewById(R.id.password);
-        confirmPassword = bottomSheetView.findViewById(R.id.confirmPassword);
+        keystoreNameInput = bottomSheetView.findViewById(R.id.keystoreNameInput);
+        alias = bottomSheetView.findViewById(R.id.aliasInput);
+        password = bottomSheetView.findViewById(R.id.passwordInput);
+        confirmPassword = bottomSheetView.findViewById(R.id.repeatPasswordInput);
+        commonNameInput = bottomSheetView.findViewById(R.id.commonNameInput);
+        organizationInput = bottomSheetView.findViewById(R.id.organizationInput);
+        organizationalUnitInput = bottomSheetView.findViewById(R.id.organizationalUnitInput);
+        localityInput = bottomSheetView.findViewById(R.id.localityInput);
+        stateInput = bottomSheetView.findViewById(R.id.stateInput);
+        countryInput = bottomSheetView.findViewById(R.id.countryInput);
+        String commonName = commonNameInput.getText().toString().trim(),
+                organization = organizationInput.getText().toString().trim(),
+                organizationalUnit = organizationalUnitInput.getText().toString().trim(),
+                locality = localityInput.getText().toString().trim(),
+                state = stateInput.getText().toString().trim(),
+                country = countryInput.getText().toString().trim();
+
+        CustomDropdownItem validityInput = bottomSheetView.findViewById(R.id.validityInput);
+
+        View popupView = LayoutInflater.from(this)
+                .inflate(R.layout.validity_dropdown, null);
+
+        RecyclerView recyclerView = popupView.findViewById(R.id.recyclerView);
+
+        Date[] validity = {null, null};
+
+        RadioAdapter validityAdapter = new RadioAdapter(
+                Arrays.asList(getResources().getStringArray(R.array.validity_options)),
+                (position, value) -> {
+
+                    String[] parts = value.split(" ");
+                    int amount = Integer.parseInt(parts[0]);
+                    String unit = parts[1].toLowerCase();
+
+                    Calendar calendar = Calendar.getInstance();
+
+                    validity[0] = calendar.getTime();
+
+                    if (unit.startsWith("month")) {
+                        calendar.add(Calendar.MONTH, amount);
+                    } else if (unit.startsWith("year")) {
+                        calendar.add(Calendar.YEAR, amount);
+                    }
+
+                    validity[1] = calendar.getTime();
+                }
+        );
+
+        recyclerView.setAdapter(validityAdapter);
+        validityInput.showPopupWindow(popupView);
+
+        ConstraintLayout advancedSettingsLayout = bottomSheetView.findViewById(R.id.advancedSettingsContent);
+        ImageButton advancedSettingsButton = bottomSheetView.findViewById(R.id.advancedSettingsButton),
+                rsaCheck = bottomSheetView.findViewById(R.id.rsaCard),
+                ecCheck = bottomSheetView.findViewById(R.id.ecCard);
+        advancedSettingsButton.setOnClickListener(v -> advancedSettingsLayout.setVisibility(advancedSettingsLayout.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE));
+        MaterialCardView rsaCard = bottomSheetView.findViewById(R.id.rsaCard),
+                ecCard = bottomSheetView.findViewById(R.id.ecCard);
+
+        rsaCard.setOnClickListener(v -> {
+            rsaCheck.setVisibility(View.VISIBLE);
+            //rsaCard.setCardBackgroundColor(com.google.android.material.R.attr.colorOnSecondaryContainer);
+            ecCheck.setVisibility(View.GONE);
+            //ecCard.setBackgroundColor(com.google.android.material.R.attr.colorSurface);
+        });
+        ecCard.setOnClickListener(v -> {
+            ecCheck.setVisibility(View.VISIBLE);
+            //ecCard.setBackgroundColor(com.google.android.material.R.attr.colorSecondaryVariant);
+            rsaCheck.setVisibility(View.GONE);
+            //ecCard.setBackgroundColor(com.google.android.material.R.attr.colorSurface);
+        });
 
         MaterialButton generateBtn = bottomSheetView.findViewById(R.id.btnGenerate);
 
         generateBtn.setOnClickListener(v -> {
-
-            name = keystoreName.getText().toString().trim();
+            keystoreName = keystoreNameInput.getText().toString().trim();
             aliasName = alias.getText().toString().trim();
             pass = password.getText().toString().trim();
             confirm = confirmPassword.getText().toString().trim();
 
-            if (!validateGenerateInput()) {
-                return;
-            }
+            if (!validateGenerateInput()) return;
 
-            generateKeystore(
-                    name,
-                    aliasName,
-                    pass
-            );
+            generateKeystore(keystoreName, aliasName, pass, commonName, organization, organizationalUnit, locality, state, country, validity[0], validity[1]);
 
             bottomSheetDialog.dismiss();
         });

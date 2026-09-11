@@ -3,11 +3,16 @@ package com.szn.merger.Utils.CustomView;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.util.AttributeSet;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.PopupWindow;
 import android.widget.TextView;
 
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
@@ -120,9 +125,17 @@ public class CustomDropdownItem extends LinearLayout {
                 .start();
     }
 
-    public void showDropdownContent(View view) {
-        dropdown.removeAllViews();
-        dropdown.addView(view);
-        expand();
+    public void showPopupWindow(View popupView) {
+        PopupWindow popupWindow = new PopupWindow(
+                popupView,
+                (int) (280 * getResources().getDisplayMetrics().density),
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                true
+        );
+
+        popupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        popupWindow.setOutsideTouchable(true);
+        popupWindow.setElevation(10 * getResources().getDisplayMetrics().density);
+        popupWindow.showAsDropDown(this, 0, 4, Gravity.END);
     }
 }

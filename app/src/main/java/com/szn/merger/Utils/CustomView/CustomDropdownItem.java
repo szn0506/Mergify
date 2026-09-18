@@ -20,9 +20,9 @@ import com.szn.merger.R;
 
 public class CustomDropdownItem extends LinearLayout {
 
-    private LinearLayout dropdown;
     private ImageView arrow;
     private boolean expanded;
+    private View popupView;
 
     public CustomDropdownItem(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -38,10 +38,16 @@ public class CustomDropdownItem extends LinearLayout {
         TextView title = findViewById(R.id.txt_title);
         TextView subtitle = findViewById(R.id.txt_subtitle);
 
-        TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.CustomDropdownItem);
+        TypedArray a = context.obtainStyledAttributes(
+                attrs,
+                R.styleable.CustomDropdownItem
+        );
 
-        String titleText = a.getString(R.styleable.CustomDropdownItem_title);
-        String subtitleText = a.getString(R.styleable.CustomDropdownItem_subtitle);
+        String titleText =
+                a.getString(R.styleable.CustomDropdownItem_title);
+
+        String subtitleText =
+                a.getString(R.styleable.CustomDropdownItem_subtitle);
 
         title.setText(titleText);
 
@@ -55,34 +61,23 @@ public class CustomDropdownItem extends LinearLayout {
         a.recycle();
 
         root.setOnClickListener(v -> {
-            if (expanded) {
-                collapse();
-            } else {
-                expand();
+            if (popupView == null) {
+                return;
             }
+
+            if (expanded) {
+                return;
+            }
+
+            showPopupWindow();
         });
     }
 
-    private void expand() {
-        expanded = true;
-        arrow.animate()
-                .rotation(180f)
-                .setDuration(250)
-                .setInterpolator(new FastOutSlowInInterpolator())
-                .start();
-    }
-
-    private void collapse() {
-        expanded = false;
-
-        arrow.animate()
-                .rotation(0f)
-                .setDuration(250)
-                .setInterpolator(new FastOutSlowInInterpolator())
-                .start();
-    }
-
     public void showPopupWindow(View popupView) {
+        this.popupView = popupView;
+    }
+
+    private void showPopupWindow() {
         PopupWindow popupWindow = new PopupWindow(
                 popupView,
                 (int) (280 * getResources().getDisplayMetrics().density),
@@ -90,9 +85,39 @@ public class CustomDropdownItem extends LinearLayout {
                 true
         );
 
-        popupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        popupWindow.setBackgroundDrawable(
+                new ColorDrawable(Color.TRANSPARENT)
+        );
+
         popupWindow.setOutsideTouchable(true);
-        popupWindow.setElevation(10 * getResources().getDisplayMetrics().density);
-        popupWindow.showAsDropDown(this, 0, 4, Gravity.END);
+
+        popupWindow.setElevation(
+                10 * getResources().getDisplayMetrics().density
+        );
+
+        popupWindow.setOnDismissListener(() -> {
+            expanded = false;
+
+            arrow.animate()
+                    .rotation(0f)
+                    .setDuration(250)
+                    .setInterpolator(new FastOutSlowInInterpolator())
+                    .start();
+        });
+
+        expanded = true;
+
+        arrow.animate()
+                .rotation(180f)
+                .setDuration(250)
+                .setInterpolator(new FastOutSlowInInterpolator())
+                .start();
+
+        popupWindow.showAsDropDown(
+                this,
+                0,
+                4,
+                Gravity.END
+        );
     }
 }

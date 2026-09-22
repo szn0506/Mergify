@@ -90,19 +90,19 @@
         <item name="cardPreventCornerOverlap">false</item>
     </style>
     <style name="Widget.Card.FlatMiddle" parent="Widget.Material3.CardView.Filled">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">wrap_content</item>
+        <item name="cardCornerRadius">5dp</item>
         <item name="cardBackgroundColor">?attr/colorSurfaceVariant</item>
+        <item name="cardPreventCornerOverlap">false</item>
     </style>
     <style name="Widget.Card.RoundedMiddle" parent="Widget.Material3.CardView.Filled">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">wrap_content</item>
+        <item name="cardCornerRadius">16dp</item>
         <item name="cardBackgroundColor">?attr/colorSurfaceVariant</item>
+        <item name="cardPreventCornerOverlap">false</item>
     </style>
     <style name="Widget.Card.RoundedBottom" parent="Widget.Material3.CardView.Filled">
         <item name="shapeAppearanceOverlay">@style/Shape.RoundedBottom</item>
         <item name="cardBackgroundColor">?attr/colorSurfaceVariant</item>
-        <item name="android:layout_marginBottom">2dp</item>
+        <item name="cardPreventCornerOverlap">false</item>
     </style>
     <style name="AppTheme.Dynamic.PureBlack" parent="AppTheme.Dynamic">
         <item name="android:colorBackground">#000000</item>

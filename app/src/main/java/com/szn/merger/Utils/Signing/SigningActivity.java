@@ -24,6 +24,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.checkbox.MaterialCheckBox;
+import com.google.android.material.color.MaterialColors;
 import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.timepicker.MaterialTimePicker;
@@ -56,6 +57,7 @@ public class SigningActivity extends AppCompatActivity {
     private Uri selectedKeystoreUri;
     private String selectedKeystoreType, selectedKeystoreName;
     private String currentKeystoreType = "PKCS12";
+    private String currentKeyAlgorithm = "PKCS12";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -350,6 +352,24 @@ public class SigningActivity extends AppCompatActivity {
 
         keystoreTypeDropdown.showPopupWindow(popupView);
     }
+    private void handleKeyAlgorithm(View view) {
+        MaterialCardView rsaCard = view.findViewById(R.id.rsaCard), ecCard = view.findViewById(R.id.ecCard);
+        rsaCard.setOnClickListener(v -> {
+            rsaCard.setStrokeWidth((int) (1 * getResources().getDisplayMetrics().density + 0.5f));
+            rsaCard.setCardBackgroundColor(MaterialColors.getColor(rsaCard, com.google.android.material.R.attr.colorPrimaryContainer));
+            currentKeyAlgorithm = "RSA";
+            ecCard.setStrokeWidth(0);
+            ecCard.setCardBackgroundColor(MaterialColors.getColor(ecCard, com.google.android.material.R.attr.colorSurfaceContainer));
+        });
+
+        ecCard.setOnClickListener(v -> {
+            ecCard.setStrokeWidth((int) (1 * getResources().getDisplayMetrics().density + 0.5f));
+            ecCard.setCardBackgroundColor(MaterialColors.getColor(ecCard, com.google.android.material.R.attr.colorPrimaryContainer));
+            currentKeyAlgorithm = "EC";
+            rsaCard.setStrokeWidth(0);
+            rsaCard.setCardBackgroundColor(MaterialColors.getColor(rsaCard, com.google.android.material.R.attr.colorSurfaceContainer));
+        });
+    }
     private void showGenerateBottomSheet() {
         BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(this);
         View bottomSheetView = LayoutInflater.from(this).inflate(R.layout.keystore_generator_bottom_sheet, null);
@@ -364,7 +384,9 @@ public class SigningActivity extends AppCompatActivity {
         password = bottomSheetView.findViewById(R.id.passwordInput);
         confirmPassword = bottomSheetView.findViewById(R.id.repeatPasswordInput);
         CustomDropdownItem keystoreTypeDropdown = bottomSheetView.findViewById(R.id.KeystoreTypeDropdown);
+
         showKeystoreTypeDropdown(keystoreTypeDropdown);
+        handleKeyAlgorithm(bottomSheetView);
 
         commonNameInput = bottomSheetView.findViewById(R.id.commonNameInput);
         organizationInput = bottomSheetView.findViewById(R.id.organizationInput);

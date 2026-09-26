@@ -21,19 +21,16 @@ import com.google.android.material.color.MaterialColors;
 import com.szn.merger.R;
 
 public class CustomDropdownItem extends LinearLayout {
-
     private ImageView icon;
     private ImageView arrow;
     private LinearLayout textContainer;
-
     private boolean expanded;
     private PopupWindow popupWindow;
-
     private String selectedOption;
     private String defaultOption;
     private View lastChecked;
-
     private String[] options;
+    private Runnable onDismissListener;
 
     public CustomDropdownItem(Context context) {
         super(context);
@@ -113,15 +110,11 @@ public class CustomDropdownItem extends LinearLayout {
 
         defaultOption = options[0];
 
-        if (selectedOption == null || !containsOption(selectedOption))
-            selectedOption = defaultOption;
-
+        if (selectedOption == null) selectedOption = defaultOption;
         ((TextView) findViewById(R.id.txt_title)).setText(selectedOption);
     }
 
     public void setDefaultOption(String option) {
-        if (!containsOption(option)) return;
-
         defaultOption = option;
         selectedOption = option;
         ((TextView) findViewById(R.id.txt_title)).setText(option);
@@ -135,21 +128,8 @@ public class CustomDropdownItem extends LinearLayout {
         return selectedOption;
     }
 
-    public void setSelectedOption(String option) {
-        if (!containsOption(option)) return;
-
-        selectedOption = option;
-        ((TextView) findViewById(R.id.txt_title)).setText(option);
-    }
-
-    private boolean containsOption(String option) {
-        if (options == null || option == null) return false;
-
-        for (String value : options) {
-            if (value.equals(option)) return true;
-        }
-
-        return false;
+    public void setOnDismissListener(Runnable listener) {
+        onDismissListener = listener;
     }
 
     private void showPopupWindow() {
@@ -210,6 +190,7 @@ public class CustomDropdownItem extends LinearLayout {
         popupWindow.setOnDismissListener(() -> {
             expanded = false;
             arrow.animate().rotation(0f).setDuration(250).setInterpolator(new FastOutSlowInInterpolator()).start();
+            if (onDismissListener != null) onDismissListener.run();
         });
 
         expanded = true;

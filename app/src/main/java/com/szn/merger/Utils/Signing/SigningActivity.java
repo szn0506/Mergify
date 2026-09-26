@@ -57,8 +57,9 @@ public class SigningActivity extends AppCompatActivity {
     private Uri selectedKeystoreUri;
     private String selectedKeystoreType, selectedKeystoreName;
     private String currentKeystoreType = "PKCS12";
-    private String currentKeyAlgorithm = "PKCS12";
-
+    private String currentKeyAlgorithm = "RSA";
+    private String currentKeySize = "2048";
+    private String currentECCurve = "secp256r1";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         ThemeManager.applyTheme(this);
@@ -294,63 +295,12 @@ public class SigningActivity extends AppCompatActivity {
         });
         customValidity.setOnClickListener(v -> dialog.show());
         Log.d("VALIDITY", "customValidity = " + customValidity);
-        validityInput.showPopupWindow(popupView);
     }
 
     private void showKeystoreTypeDropdown(CustomDropdownItem keystoreTypeDropdown) {
-        View popupView = LayoutInflater.from(this).inflate(R.layout.keystore_type_dropdown, null);
-
-        ImageView checkJKS = popupView.findViewById(R.id.check_jks);
-        ImageView checkPKCS12 = popupView.findViewById(R.id.check_pkcs12);
-        ImageView checkJCEKS = popupView.findViewById(R.id.check_jceks);
-        ImageView checkBKS = popupView.findViewById(R.id.check_bks);
-        ImageView checkBKSV1 = popupView.findViewById(R.id.check_bks_v1);
-        ImageView checkUBER = popupView.findViewById(R.id.check_uber);
-        ImageView checkBCFKS = popupView.findViewById(R.id.check_bcfks);
-
-        RelativeLayout JKS = popupView.findViewById(R.id.jks);
-        RelativeLayout PKCS12 = popupView.findViewById(R.id.pkcs12);
-        RelativeLayout JCEKS = popupView.findViewById(R.id.jceks);
-        RelativeLayout BKS = popupView.findViewById(R.id.bks);
-        RelativeLayout BKSV1 = popupView.findViewById(R.id.bks_v1);
-        RelativeLayout UBER = popupView.findViewById(R.id.uber);
-        RelativeLayout BCFKS = popupView.findViewById(R.id.bcfks);
-
-        checkJKS.setVisibility(currentKeystoreType.equals("JKS") ? View.VISIBLE : View.GONE);
-        checkPKCS12.setVisibility(currentKeystoreType.equals("PKCS12") ? View.VISIBLE : View.GONE);
-        checkJCEKS.setVisibility(currentKeystoreType.equals("JCEKS") ? View.VISIBLE : View.GONE);
-        checkBKS.setVisibility(currentKeystoreType.equals("BKS") ? View.VISIBLE : View.GONE);
-        checkBKSV1.setVisibility(currentKeystoreType.equals("BKS-V1") ? View.VISIBLE : View.GONE);
-        checkUBER.setVisibility(currentKeystoreType.equals("UBER") ? View.VISIBLE : View.GONE);
-        checkBCFKS.setVisibility(currentKeystoreType.equals("BCFKS") ? View.VISIBLE : View.GONE);
-
-        View.OnClickListener listener = v -> {
-            currentKeystoreType = v == JKS ? "JKS" :
-                    v == PKCS12 ? "PKCS12" :
-                    v == JCEKS ? "JCEKS" :
-                    v == BKS ? "BKS" :
-                    v == BKSV1 ? "BKS-V1" :
-                    v == UBER ? "UBER" :
-                    "BCFKS";
-
-            checkJKS.setVisibility(currentKeystoreType.equals("JKS") ? View.VISIBLE : View.GONE);
-            checkPKCS12.setVisibility(currentKeystoreType.equals("PKCS12") ? View.VISIBLE : View.GONE);
-            checkJCEKS.setVisibility(currentKeystoreType.equals("JCEKS") ? View.VISIBLE : View.GONE);
-            checkBKS.setVisibility(currentKeystoreType.equals("BKS") ? View.VISIBLE : View.GONE);
-            checkBKSV1.setVisibility(currentKeystoreType.equals("BKS-V1") ? View.VISIBLE : View.GONE);
-            checkUBER.setVisibility(currentKeystoreType.equals("UBER") ? View.VISIBLE : View.GONE);
-            checkBCFKS.setVisibility(currentKeystoreType.equals("BCFKS") ? View.VISIBLE : View.GONE);
-            keystoreTypeDropdown.dismissPopupWindow();
-        };
-        JKS.setOnClickListener(listener);
-        PKCS12.setOnClickListener(listener);
-        JCEKS.setOnClickListener(listener);
-        BKS.setOnClickListener(listener);
-        BKSV1.setOnClickListener(listener);
-        UBER.setOnClickListener(listener);
-        BCFKS.setOnClickListener(listener);
-
-        keystoreTypeDropdown.showPopupWindow(popupView);
+        keystoreTypeDropdown.setOptions(getResources().getStringArray(R.array.keystore_types));
+        keystoreTypeDropdown.setDefaultOption(currentKeystoreType);
+        keystoreTypeDropdown.setOnDismissListener(() -> currentKeystoreType = keystoreTypeDropdown.getSelectedOption());
     }
     private void handleKeyAlgorithm(View view) {
         MaterialCardView rsaCard = view.findViewById(R.id.rsaCard), ecCard = view.findViewById(R.id.ecCard);
@@ -370,6 +320,29 @@ public class SigningActivity extends AppCompatActivity {
             rsaCard.setCardBackgroundColor(MaterialColors.getColor(rsaCard, com.google.android.material.R.attr.colorSurfaceContainer));
         });
     }
+
+    private void showKeySize(View view) {
+        TextView keySizeTitle = view.findViewById(R.id.keySizeTitle), keySizeSubtitle = view.findViewById(R.id.keySizeSubtitle);
+        CustomDropdownItem keySizeDropdown = view.findViewById(R.id.keySizeDropdown);
+        String[] options;
+        String currentOption;
+
+        if ("RSA".equals(currentKeyAlgorithm)) {
+            options = getResources().getStringArray(R.array.rsa_key_sizes);
+            currentOption = currentKeySize;
+            keySizeTitle.setText(R.string.key_size);
+            keySizeSubtitle.setText(R.string.select_the_size_of_your_keystore);
+        } else {
+            options = getResources().getStringArray(R.array.ec_key_sizes);
+            currentOption = currentECCurve;
+            keySizeTitle.setText(R.string.ec_curve_title);
+            keySizeSubtitle.setText(R.string.ec_curve_subtitle);
+        }
+
+        keySizeDropdown.setOptions(options);
+        keySizeDropdown.setDefaultOption(currentOption);
+    }
+
     private void showGenerateBottomSheet() {
         BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(this);
         View bottomSheetView = LayoutInflater.from(this).inflate(R.layout.keystore_generator_bottom_sheet, null);
@@ -387,6 +360,7 @@ public class SigningActivity extends AppCompatActivity {
 
         showKeystoreTypeDropdown(keystoreTypeDropdown);
         handleKeyAlgorithm(bottomSheetView);
+        showKeySize(bottomSheetView);
 
         commonNameInput = bottomSheetView.findViewById(R.id.commonNameInput);
         organizationInput = bottomSheetView.findViewById(R.id.organizationInput);

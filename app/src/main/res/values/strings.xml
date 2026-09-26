@@ -558,7 +558,46 @@
     <string name="no_matching_dpi_was_found_select_a_split_instead">No matching DPI was found, select a split instead.</string>
     <string name="no_matching_language_was_found_select_a_split_instead">No matching Language was found, select a split instead.</string>
     <string name="select_at_least_one_file">Select at least one file</string>
-
+    <string name="basic_information">Basic Information</string>
+    <string name="required_fields_to_create_your_keystore">Required fields to create your keystore</string>
+    <string name="keystore_hint">e.g. MyApp</string>
+    <string name="the_name_of_the_keystore_file">The name of the keystore file.</string>
+    <string name="alias_hint">e.g. release</string>
+    <string name="multiple_aliases_separated_by_commas">Multiple aliases separated by commas.</string>
+    <string name="password_hint">12345678</string>
+    <string name="the_password_used_to_protect_the_keystore">The password used to protect the keystore.</string>
+    <string name="repeat_password">Repeat Password</string>
+    <string name="re_enter_the_password_to_confirm_it">Re-enter the password to confirm it.</string>
+    <string name="keystore_type">Keystore Type</string>
+    <string name="bks">BKS</string>
+    <string name="select_the_keystore_type_of_your_keystore">Select the keystore type of your keystore</string>
+    <string name="advanced_options">Advanced Options</string>
+    <string name="key_algorithm">Key Algorithm</string>
+    <string name="select_the_key_generation_algorithm">Select the key generation algorithm.</string>
+    <string name="rsa">RSA</string>
+    <string name="ec">EC</string>
+    <string name="key_size">Key Size</string>
+    <string name="select_the_size_of_your_keystore">Select the size of your keystore</string>
+    <string name="signature_algorithm">Signature Algorithm</string>
+    <string name="select_the_algorithm_of_your_keystore">Select the algorithm of your keystore</string>
+    <string name="certificate_information">Certificate Information</string>
+    <string name="subject_details_for_the_certificate">Subject details for the certificate.</string>
+    <string name="common_name">Common Name</string>
+    <string name="organization">Organization</string>
+    <string name="organizational_unit">Organizational Unit</string>
+    <string name="locality">Locality</string>
+    <string name="state_province">State/Province</string>
+    <string name="country">Country</string>
+    <string name="validity">Validity</string>
+    <string name="set_the_validity_period_of_your_certificate">Set the validity period of your certificate</string>
+    <string name="ec_curve_title">EC Curve</string>
+    <string name="ec_curve_subtitle">Select the elliptic curve for the EC key.</string>
+    <string name="ec_curve_secp256r1">secp256r1</string>
+    <string name="ec_curve_secp384r1">secp384r1</string>
+    <string name="ec_curve_secp521r1">secp521r1</string>
+    <string name="ec_signature_algorithm_sha256">SHA256withECDSA</string>
+    <string name="ec_signature_algorithm_sha384">SHA384withECDSA</string>
+    <string name="ec_signature_algorithm_sha512">SHA512withECDSA</string>
     <string-array name="validity_options">
         <item>1 Month</item>
         <item>3 Months</item>

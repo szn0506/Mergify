@@ -6,14 +6,16 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -22,16 +24,21 @@ import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.checkbox.MaterialCheckBox;
+import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.timepicker.MaterialTimePicker;
+import com.google.android.material.timepicker.TimeFormat;
 import com.szn.merger.CustomSwitchItem;
 import com.szn.merger.R;
 import com.szn.merger.ThemeManager;
 import com.szn.merger.Utils.CustomView.CustomDropdownItem;
 import com.szn.merger.Utils.RadioAdapter;
 
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 import java.util.StringJoiner;
 
 public class SigningActivity extends AppCompatActivity {
@@ -48,6 +55,7 @@ public class SigningActivity extends AppCompatActivity {
     private String keystoreName, aliasName, pass, confirm, importPass;
     private Uri selectedKeystoreUri;
     private String selectedKeystoreType, selectedKeystoreName;
+    private String currentKeystoreType = "PKCS12";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -143,42 +151,14 @@ public class SigningActivity extends AppCompatActivity {
         }
     }
 
-    private void showGenerateBottomSheet() {
-        BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(this);
-        View bottomSheetView = LayoutInflater.from(this).inflate(R.layout.keystore_generator_bottom_sheet, null);
-        bottomSheetDialog.setContentView(bottomSheetView);
-        bottomSheetDialog.show();
-
-        keystoreNameInput = bottomSheetView.findViewById(R.id.keystoreNameInput);
-        alias = bottomSheetView.findViewById(R.id.aliasInput);
-        password = bottomSheetView.findViewById(R.id.passwordInput);
-        confirmPassword = bottomSheetView.findViewById(R.id.repeatPasswordInput);
-        commonNameInput = bottomSheetView.findViewById(R.id.commonNameInput);
-        organizationInput = bottomSheetView.findViewById(R.id.organizationInput);
-        organizationalUnitInput = bottomSheetView.findViewById(R.id.organizationalUnitInput);
-        localityInput = bottomSheetView.findViewById(R.id.localityInput);
-        stateInput = bottomSheetView.findViewById(R.id.stateInput);
-        countryInput = bottomSheetView.findViewById(R.id.countryInput);
-        String commonName = commonNameInput.getText().toString().trim(),
-                organization = organizationInput.getText().toString().trim(),
-                organizationalUnit = organizationalUnitInput.getText().toString().trim(),
-                locality = localityInput.getText().toString().trim(),
-                state = stateInput.getText().toString().trim(),
-                country = countryInput.getText().toString().trim();
-
-        CustomDropdownItem validityInput = bottomSheetView.findViewById(R.id.validityInput);
-
-        View popupView = LayoutInflater.from(this)
-                .inflate(R.layout.validity_dropdown, null);
-
+    private void showValidityOption(CustomDropdownItem validityInput, Date[] validity) {
+        View popupView = LayoutInflater.from(this).inflate(R.layout.validity_dropdown, null);
+        LinearLayout customValidity = popupView.findViewById(R.id.customValidity);
         RecyclerView recyclerView = popupView.findViewById(R.id.recyclerView);
-
-        Date[] validity = {null, null};
 
         RadioAdapter validityAdapter = new RadioAdapter(
                 Arrays.asList(getResources().getStringArray(R.array.validity_options)),
                 (position, value) -> {
-
                     String[] parts = value.split(" ");
                     int amount = Integer.parseInt(parts[0]);
                     String unit = parts[1].toLowerCase();
@@ -198,28 +178,200 @@ public class SigningActivity extends AppCompatActivity {
         );
 
         recyclerView.setAdapter(validityAdapter);
+
+        View validityDialog = getLayoutInflater().inflate(R.layout.validity_dialog, null);
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setView(validityDialog)
+                .create();
+
+        MaterialCardView startDateCard = validityDialog.findViewById(R.id.startDateCard),
+                startTimeCard = validityDialog.findViewById(R.id.startTimeCard),
+                expiryDateCard = validityDialog.findViewById(R.id.expiryDateCard),
+                expiryTimeCard = validityDialog.findViewById(R.id.expiryTimeCard);
+        TextView startDatePreview = validityDialog.findViewById(R.id.startDateSubtitle),
+                startTimePreview = validityDialog.findViewById(R.id.startTimerSubtitle),
+                expiryDatePreview = validityDialog.findViewById(R.id.expiryDateSubtitle),
+                expiryTimePreview = validityDialog.findViewById(R.id.expiryTimeSubtitle);
+
+        Calendar startDate = Calendar.getInstance();
+        startDate.set(Calendar.HOUR_OF_DAY, 0);
+        startDate.set(Calendar.MINUTE, 0);
+        startDate.set(Calendar.SECOND, 0);
+        startDate.set(Calendar.MILLISECOND, 0);
+        validity[0] = startDate.getTime();
+
+        Calendar expiryDate = Calendar.getInstance();
+        expiryDate.set(Calendar.HOUR_OF_DAY, 0);
+        expiryDate.set(Calendar.MINUTE, 0);
+        expiryDate.set(Calendar.SECOND, 0);
+        expiryDate.set(Calendar.MILLISECOND, 0);
+        validity[1] = expiryDate.getTime();
+
+        startDateCard.setOnClickListener(v -> {
+            MaterialDatePicker<Long> datePicker = MaterialDatePicker.Builder.datePicker()
+                    .setTitleText("Select start date")
+                    .setSelection(MaterialDatePicker.todayInUtcMilliseconds())
+                    .build();
+
+            datePicker.addOnPositiveButtonClickListener(selection -> {
+                Calendar selected = Calendar.getInstance();
+                selected.setTimeInMillis(selection);
+
+                startDate.set(Calendar.YEAR, selected.get(Calendar.YEAR));
+                startDate.set(Calendar.MONTH, selected.get(Calendar.MONTH));
+                startDate.set(Calendar.DAY_OF_MONTH, selected.get(Calendar.DAY_OF_MONTH));
+
+                validity[0] = startDate.getTime();
+                startDatePreview.setText(new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(startDate.getTime()));
+            });
+
+            datePicker.show(getSupportFragmentManager(), "START_DATE");
+        });
+
+        startTimeCard.setOnClickListener(v -> {
+            MaterialTimePicker timePicker = new MaterialTimePicker.Builder()
+                    .setTimeFormat(TimeFormat.CLOCK_24H)
+                    .setHour(0)
+                    .setMinute(0)
+                    .setTitleText("Select start time")
+                    .build();
+
+            timePicker.addOnPositiveButtonClickListener(v1 -> {
+                startDate.set(Calendar.HOUR_OF_DAY, timePicker.getHour());
+                startDate.set(Calendar.MINUTE, timePicker.getMinute());
+                startDate.set(Calendar.SECOND, 0);
+                startDate.set(Calendar.MILLISECOND, 0);
+
+                validity[0] = startDate.getTime();
+                startTimePreview.setText(String.format(Locale.getDefault(), "%02d:%02d:%02d", startDate.get(Calendar.HOUR_OF_DAY), startDate.get(Calendar.MINUTE), startDate.get(Calendar.SECOND)));
+            });
+
+            timePicker.show(getSupportFragmentManager(), "START_TIME");
+        });
+
+        expiryDateCard.setOnClickListener(v -> {
+            MaterialDatePicker<Long> datePicker = MaterialDatePicker.Builder.datePicker()
+                    .setTitleText("Select expiry date")
+                    .setSelection(MaterialDatePicker.todayInUtcMilliseconds())
+                    .build();
+
+            datePicker.addOnPositiveButtonClickListener(selection -> {
+                Calendar selected = Calendar.getInstance();
+                selected.setTimeInMillis(selection);
+
+                expiryDate.set(Calendar.YEAR, selected.get(Calendar.YEAR));
+                expiryDate.set(Calendar.MONTH, selected.get(Calendar.MONTH));
+                expiryDate.set(Calendar.DAY_OF_MONTH, selected.get(Calendar.DAY_OF_MONTH));
+
+                validity[1] = expiryDate.getTime();
+                expiryDatePreview.setText(new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(expiryDate.getTime()));
+            });
+
+            datePicker.show(getSupportFragmentManager(), "EXPIRY_DATE");
+        });
+
+        expiryTimeCard.setOnClickListener(v -> {
+            MaterialTimePicker timePicker = new MaterialTimePicker.Builder()
+                    .setTimeFormat(TimeFormat.CLOCK_24H)
+                    .setHour(0)
+                    .setMinute(0)
+                    .setTitleText("Select expiry time")
+                    .build();
+
+            timePicker.addOnPositiveButtonClickListener(v1 -> {
+                expiryDate.set(Calendar.HOUR_OF_DAY, timePicker.getHour());
+                expiryDate.set(Calendar.MINUTE, timePicker.getMinute());
+                expiryDate.set(Calendar.SECOND, 0);
+                expiryDate.set(Calendar.MILLISECOND, 0);
+
+                validity[1] = expiryDate.getTime();
+                expiryTimePreview.setText(String.format(Locale.getDefault(), "%02d:%02d:%02d", expiryDate.get(Calendar.HOUR_OF_DAY), expiryDate.get(Calendar.MINUTE), expiryDate.get(Calendar.SECOND)));
+            });
+
+            timePicker.show(getSupportFragmentManager(), "EXPIRY_TIME");
+        });
+        customValidity.setOnClickListener(v -> dialog.show());
+        Log.d("VALIDITY", "customValidity = " + customValidity);
         validityInput.showPopupWindow(popupView);
+    }
 
-        ConstraintLayout advancedSettingsLayout = bottomSheetView.findViewById(R.id.advancedSettingsContent);
-        ImageButton advancedSettingsButton = bottomSheetView.findViewById(R.id.advancedSettingsButton),
-                rsaCheck = bottomSheetView.findViewById(R.id.rsaCard),
-                ecCheck = bottomSheetView.findViewById(R.id.ecCard);
-        advancedSettingsButton.setOnClickListener(v -> advancedSettingsLayout.setVisibility(advancedSettingsLayout.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE));
-        MaterialCardView rsaCard = bottomSheetView.findViewById(R.id.rsaCard),
-                ecCard = bottomSheetView.findViewById(R.id.ecCard);
+    private void showKeystoreTypeDropdown(CustomDropdownItem keystoreTypeDropdown) {
+        View popupView = LayoutInflater.from(this).inflate(R.layout.keystore_type_dropdown, null);
 
-        rsaCard.setOnClickListener(v -> {
-            rsaCheck.setVisibility(View.VISIBLE);
-            //rsaCard.setCardBackgroundColor(com.google.android.material.R.attr.colorOnSecondaryContainer);
-            ecCheck.setVisibility(View.GONE);
-            //ecCard.setBackgroundColor(com.google.android.material.R.attr.colorSurface);
-        });
-        ecCard.setOnClickListener(v -> {
-            ecCheck.setVisibility(View.VISIBLE);
-            //ecCard.setBackgroundColor(com.google.android.material.R.attr.colorSecondaryVariant);
-            rsaCheck.setVisibility(View.GONE);
-            //ecCard.setBackgroundColor(com.google.android.material.R.attr.colorSurface);
-        });
+        ImageView checkJKS = popupView.findViewById(R.id.check_jks);
+        ImageView checkPKCS12 = popupView.findViewById(R.id.check_pkcs12);
+        ImageView checkJCEKS = popupView.findViewById(R.id.check_jceks);
+        ImageView checkBKS = popupView.findViewById(R.id.check_bks);
+        ImageView checkBKSV1 = popupView.findViewById(R.id.check_bks_v1);
+        ImageView checkUBER = popupView.findViewById(R.id.check_uber);
+        ImageView checkBCFKS = popupView.findViewById(R.id.check_bcfks);
+
+        RelativeLayout JKS = popupView.findViewById(R.id.jks);
+        RelativeLayout PKCS12 = popupView.findViewById(R.id.pkcs12);
+        RelativeLayout JCEKS = popupView.findViewById(R.id.jceks);
+        RelativeLayout BKS = popupView.findViewById(R.id.bks);
+        RelativeLayout BKSV1 = popupView.findViewById(R.id.bks_v1);
+        RelativeLayout UBER = popupView.findViewById(R.id.uber);
+        RelativeLayout BCFKS = popupView.findViewById(R.id.bcfks);
+
+        checkJKS.setVisibility(currentKeystoreType.equals("JKS") ? View.VISIBLE : View.GONE);
+        checkPKCS12.setVisibility(currentKeystoreType.equals("PKCS12") ? View.VISIBLE : View.GONE);
+        checkJCEKS.setVisibility(currentKeystoreType.equals("JCEKS") ? View.VISIBLE : View.GONE);
+        checkBKS.setVisibility(currentKeystoreType.equals("BKS") ? View.VISIBLE : View.GONE);
+        checkBKSV1.setVisibility(currentKeystoreType.equals("BKS-V1") ? View.VISIBLE : View.GONE);
+        checkUBER.setVisibility(currentKeystoreType.equals("UBER") ? View.VISIBLE : View.GONE);
+        checkBCFKS.setVisibility(currentKeystoreType.equals("BCFKS") ? View.VISIBLE : View.GONE);
+
+        View.OnClickListener listener = v -> {
+            currentKeystoreType = v == JKS ? "JKS" :
+                    v == PKCS12 ? "PKCS12" :
+                    v == JCEKS ? "JCEKS" :
+                    v == BKS ? "BKS" :
+                    v == BKSV1 ? "BKS-V1" :
+                    v == UBER ? "UBER" :
+                    "BCFKS";
+
+            checkJKS.setVisibility(currentKeystoreType.equals("JKS") ? View.VISIBLE : View.GONE);
+            checkPKCS12.setVisibility(currentKeystoreType.equals("PKCS12") ? View.VISIBLE : View.GONE);
+            checkJCEKS.setVisibility(currentKeystoreType.equals("JCEKS") ? View.VISIBLE : View.GONE);
+            checkBKS.setVisibility(currentKeystoreType.equals("BKS") ? View.VISIBLE : View.GONE);
+            checkBKSV1.setVisibility(currentKeystoreType.equals("BKS-V1") ? View.VISIBLE : View.GONE);
+            checkUBER.setVisibility(currentKeystoreType.equals("UBER") ? View.VISIBLE : View.GONE);
+            checkBCFKS.setVisibility(currentKeystoreType.equals("BCFKS") ? View.VISIBLE : View.GONE);
+            keystoreTypeDropdown.dismissPopupWindow();
+        };
+        JKS.setOnClickListener(listener);
+        PKCS12.setOnClickListener(listener);
+        JCEKS.setOnClickListener(listener);
+        BKS.setOnClickListener(listener);
+        BKSV1.setOnClickListener(listener);
+        UBER.setOnClickListener(listener);
+        BCFKS.setOnClickListener(listener);
+
+        keystoreTypeDropdown.showPopupWindow(popupView);
+    }
+    private void showGenerateBottomSheet() {
+        BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(this);
+        View bottomSheetView = LayoutInflater.from(this).inflate(R.layout.keystore_generator_bottom_sheet, null);
+
+        bottomSheetDialog.setContentView(bottomSheetView);
+        bottomSheetDialog.show();
+
+        Date[] validity = {null, null};
+
+        keystoreNameInput = bottomSheetView.findViewById(R.id.keystoreNameInput);
+        alias = bottomSheetView.findViewById(R.id.aliasInput);
+        password = bottomSheetView.findViewById(R.id.passwordInput);
+        confirmPassword = bottomSheetView.findViewById(R.id.repeatPasswordInput);
+        CustomDropdownItem keystoreTypeDropdown = bottomSheetView.findViewById(R.id.KeystoreTypeDropdown);
+        showKeystoreTypeDropdown(keystoreTypeDropdown);
+
+        commonNameInput = bottomSheetView.findViewById(R.id.commonNameInput);
+        organizationInput = bottomSheetView.findViewById(R.id.organizationInput);
+        organizationalUnitInput = bottomSheetView.findViewById(R.id.organizationalUnitInput);
+        localityInput = bottomSheetView.findViewById(R.id.localityInput);
+        stateInput = bottomSheetView.findViewById(R.id.stateInput);
+        countryInput = bottomSheetView.findViewById(R.id.countryInput);
 
         MaterialButton generateBtn = bottomSheetView.findViewById(R.id.btnGenerate);
 
@@ -229,9 +381,28 @@ public class SigningActivity extends AppCompatActivity {
             pass = password.getText().toString().trim();
             confirm = confirmPassword.getText().toString().trim();
 
+            String commonName = commonNameInput.getText().toString().trim();
+            String organization = organizationInput.getText().toString().trim();
+            String organizationalUnit = organizationalUnitInput.getText().toString().trim();
+            String locality = localityInput.getText().toString().trim();
+            String state = stateInput.getText().toString().trim();
+            String country = countryInput.getText().toString().trim();
+
             if (!validateGenerateInput()) return;
 
-            generateKeystore(keystoreName, aliasName, pass, commonName, organization, organizationalUnit, locality, state, country, validity[0], validity[1]);
+            generateKeystore(
+                    keystoreName,
+                    aliasName,
+                    pass,
+                    commonName,
+                    organization,
+                    organizationalUnit,
+                    locality,
+                    state,
+                    country,
+                    validity[0],
+                    validity[1]
+            );
 
             bottomSheetDialog.dismiss();
         });

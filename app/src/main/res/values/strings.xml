@@ -574,8 +574,6 @@
     <string name="advanced_options">Advanced Options</string>
     <string name="key_algorithm">Key Algorithm</string>
     <string name="select_the_key_generation_algorithm">Select the key generation algorithm.</string>
-    <string name="rsa">RSA</string>
-    <string name="ec">EC</string>
     <string name="key_size">Key Size</string>
     <string name="select_the_size_of_your_keystore">Select the size of your keystore</string>
     <string name="signature_algorithm">Signature Algorithm</string>
@@ -592,12 +590,37 @@
     <string name="set_the_validity_period_of_your_certificate">Set the validity period of your certificate</string>
     <string name="ec_curve_title">EC Curve</string>
     <string name="ec_curve_subtitle">Select the elliptic curve for the EC key.</string>
-    <string name="ec_curve_secp256r1">secp256r1</string>
-    <string name="ec_curve_secp384r1">secp384r1</string>
-    <string name="ec_curve_secp521r1">secp521r1</string>
-    <string name="ec_signature_algorithm_sha256">SHA256withECDSA</string>
-    <string name="ec_signature_algorithm_sha384">SHA384withECDSA</string>
-    <string name="ec_signature_algorithm_sha512">SHA512withECDSA</string>
+    <string-array name="rsa_key_sizes">
+        <item>1024</item>
+        <item>2048</item>
+        <item>3072</item>
+        <item>4096</item>
+    </string-array>
+    <string-array name="rsa_signature_algorithms">
+        <item>SHA256withRSA</item>
+        <item>SHA384withRSA</item>
+        <item>SHA512withRSA</item>
+    </string-array>
+
+    <string-array name="ec_signature_algorithms">
+        <item>SHA256withECDSA</item>
+        <item>SHA384withECDSA</item>
+        <item>SHA512withECDSA</item>
+    </string-array>
+    <string-array name="ec_key_sizes">
+        <item>secp256r1</item>
+        <item>secp384r1</item>
+        <item>secp521r1</item>
+    </string-array>
+    <string-array name="keystore_types">
+        <item>JKS</item>
+        <item>PKCS12</item>
+        <item>JCEKS</item>
+        <item>BKS</item>
+        <item>BKS-V1</item>
+        <item>UBER</item>
+        <item>BCFKS</item>
+    </string-array>
     <string-array name="validity_options">
         <item>1 Month</item>
         <item>3 Months</item>
